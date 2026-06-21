@@ -141,3 +141,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Home Assistant config (datos, base de datos y secretos: nunca al repo)
+homeassistant/config/
