@@ -9,5 +9,11 @@ services:
       - "8123:8123"
   piper:
     container_name: piper
-    image: "ghcr.io/rhasspy/wyoming-piper:2.2.2"
+    image: "rhasspy/wyoming-piper:latest"
+    command: --voice es_MX-claude-high
+    volumes:
+      - ./piper-data:/data
+    environment:
+      - TZ=America/Bogota
     restart: unless-stopped
+    
