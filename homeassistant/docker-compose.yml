@@ -7,3 +7,13 @@ services:
     restart: unless-stopped
     ports:
       - "8123:8123"
+  piper:
+    container_name: piper
+    image: "rhasspy/wyoming-piper:latest"
+    command: --voice es_MX-claude-high
+    volumes:
+      - ./piper-data:/data
+    environment:
+      - TZ=America/Bogota
+    restart: unless-stopped
+    

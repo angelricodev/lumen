@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 
 # Home Assistant config (datos, base de datos y secretos: nunca al repo)
 homeassistant/config/
+
+# Home Assistant data (datos generados por la maquina)
+homeassistant/piper-data/
