@@ -143,7 +143,9 @@ vite.config.ts.timestamp-*
 .vite/
 
 # Home Assistant config (datos, base de datos y secretos: nunca al repo)
-homeassistant/config/
+homeassistant/config/*
+!homeassistant/config/automations.yaml
+!homeassistant/config/configuration.yaml
 
 # Home Assistant data (datos generados por la maquina)
 homeassistant/piper-data/
