@@ -1,0 +1,39 @@
+- id: '1782068290653'
+  alias: Hola Mundo - Test de humo
+  description: Automatización de prueba para validar el pipeline de Home Assistant
+  triggers:
+  - trigger: time
+    at: '14:10:00'
+    weekday:
+    - wed
+    - sat
+    - sun
+    - fri
+    - thu
+    - tue
+    - mon
+  conditions: []
+  actions:
+  - action: persistent_notification.create
+    metadata: {}
+    data:
+      message: ¡Hola mundo desde LUMEN!
+      title: LUMEN
+  mode: single
+
+- id: greeting_on_arrival
+  alias: Mensaje inicial al llegar
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.angel_en_casa
+    from: 'off'
+    to: 'on'
+  conditions: []
+  actions:
+  - action: tts.speak
+    target:
+      entity_id: tts.piper
+    data:
+      media_player_entity_id: media_player.browser_speaker
+      message: ¡Hola Ángel! Bienvenido a casa. ¿Cómo estuvo tu día?
+  mode: single
