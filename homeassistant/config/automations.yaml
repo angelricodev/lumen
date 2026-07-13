@@ -20,3 +20,20 @@
       message: ¡Hola mundo desde LUMEN!
       title: LUMEN
   mode: single
+
+- id: greeting_on_arrival
+  alias: Mensaje inicial al llegar
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.angel_en_casa
+    from: 'off'
+    to: 'on'
+  conditions: []
+  actions:
+  - action: tts.speak
+    target:
+      entity_id: tts.piper
+    data:
+      media_player_entity_id: media_player.browser_speaker
+      message: ¡Hola Ángel! Bienvenido a casa. ¿Cómo estuvo tu día?
+  mode: single
