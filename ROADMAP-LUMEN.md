@@ -3,8 +3,8 @@
 > Asistente de voz para el hogar tipo Jarvis. Detecta mi llegada y me saluda con el clima y las noticias, con conversación por voz. Local-first y 100% gratis.
 
 **Proyecto:** personal · aprendizaje · portafolio
-**Última actualización:** 2026-06-21
-**Versión del roadmap:** 1.0
+**Última actualización:** 2026-07-13
+**Versión del roadmap:** 1.1
 
 > Nota: el nombre "LUMEN" es provisional. Si lo cambio, es un buscar-y-reemplazar en este archivo, el repo y la palabra de activación.
 
@@ -32,18 +32,22 @@ Construir a LUMEN: un asistente de voz para la casa que, cuando llego, me saluda
 | Texto a voz (TTS) | Piper o TTS free-tier (voz femenina) | Equipo / nube |
 | Cerebro (LLM) | Free-tier en la nube (ej. Groq / Gemini) | Nube |
 | Datos | APIs gratuitas de clima y noticias | Nube |
+| Salida de audio | Browser Mod (desarrollo) → PC + HDMI al TV (producción) | Equipo |
 | Dashboard | React 18 + TypeScript + Vite | Equipo |
 | Historial | PostgreSQL | Equipo |
 
 **Decisión clave (edge vs nube):** el equipo de producción es un PC viejo con ~4 GB de RAM, así que **no corre un LLM local**. El "cerebro" se delega a un free-tier en la nube; todo lo demás corre en el equipo. Esta separación es deliberada y se documenta como ADR.
+
+**Decisión clave (salida de audio):** HA corre en Docker y no tiene acceso al hardware de audio. En desarrollo, el parlante es el navegador (Browser Mod). En producción, el PC viejo sale por HDMI al televisor, que actúa como parlante tonto. Así se evita depender de las capacidades del TV como `media_player` (el modelo actual solo soporta cambio de canal, no reproducción de URLs). Se documenta como ADR.
 
 **Entornos:** el desarrollo se hace en mi PC del día a día; el despliegue final va al PC viejo, siempre encendido.
 
 ## 4. Prácticas de trabajo
 
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`...), atómicos (un cambio lógico por commit).
-- **Ramas:** `main` estable; trabajo en ramas `feat/...`; Pull Requests aunque trabaje solo.
+- **Ramas:** `main` estable; trabajo en ramas con prefijo (`feat/`, `chore/`, `docs/`); Pull Requests aunque trabaje solo.
 - **Issues:** cada tarea es un issue; los commits/PRs se enlazan (`closes #N`).
+- **Idiomas:** español para conversación y contenido narrativo (README, descripciones); inglés para artefactos técnicos (ramas, commits, títulos de issues y PRs, código).
 - **Tablero:** GitHub Projects + Issues (público, parte del portafolio).
 - **Documentación en el repo:** `README.md` como puerta de entrada, ADRs para decisiones clave, carpeta `/docs` para el resto.
 
@@ -57,11 +61,12 @@ Construir a LUMEN: un asistente de voz para la casa que, cuando llego, me saluda
 - **Aprendo:** estructura de repo, GitHub Projects/Issues, Docker para HA, flujo Git (ramas + PR), automatizaciones básicas.
 - **Listo cuando:** HA levanta en el navegador, la automatización "hola mundo" dispara una notificación, el repo tiene su primer commit y el board tiene los issues del sprint.
 
-### Sprint 1 — Presencia + primera voz
-- **Objetivo:** que LUMEN detecte mi llegada y diga un saludo básico por voz.
-- **Entregables:** geofencing con la app Companion (zona "Casa"); Piper (TTS) configurado; automatización: al entrar a zona Casa → frase fija por el parlante.
-- **Aprendo:** zonas y geofencing, eventos y disparadores, pipeline de audio (TTS → parlante), depuración de automatizaciones.
-- **Listo cuando:** al llegar a casa (o simular el evento) suena un "Bienvenido..." por el parlante.
+### Sprint 1 — Primera voz
+- **Objetivo:** que LUMEN diga un saludo por voz al dispararse un evento de llegada.
+- **Entregables:** Piper (TTS) en su propio contenedor, integrado por Wyoming; Browser Mod como `media_player` de desarrollo; `input_boolean.angel_en_casa` como disparador simulado; automatización `greeting_on_arrival` (trigger → `tts.speak`); README con instrucciones de puesta en marcha.
+- **Aprendo:** el modelo Trigger/Condition/Action de HA, el pipeline TTS → media_player, custom components, depuración de automatizaciones (trazas, consola), redes de Docker vs. host.
+- **Listo cuando:** al prender el interruptor de llegada, suena un "Bienvenido..." por el parlante.
+- **Nota:** el geofencing real y la salida de audio en casa se movieron al Sprint 4. El disparador está desacoplado a propósito: cuando llegue el geofencing, solo cambia *quién* prende el interruptor.
 
 ### Sprint 2 — Datos reales (clima + noticias)
 - **Objetivo:** que el saludo incluya el clima actual y las 3 noticias de tecnología, con datos reales.
@@ -75,23 +80,29 @@ Construir a LUMEN: un asistente de voz para la casa que, cuando llego, me saluda
 - **Aprendo:** integrar un LLM por API, diseño de prompts, manejo de latencia y límites del free-tier, separación edge/nube en la práctica.
 - **Listo cuando:** cada llegada produce un saludo natural distinto y fluido, con buena voz.
 
-### Sprint 4 — Conversación por voz
+### Sprint 4 — LUMEN en casa (presencia real + audio real)
+- **Objetivo:** sacar a LUMEN del escritorio: que corra en el PC viejo, suene en la casa y detecte mi llegada de verdad.
+- **Entregables:** HA desplegado en el PC viejo (siempre encendido); salida de audio real (PC → HDMI → televisor) reemplazando a Browser Mod; app Companion en el celular con geofencing (zona "Casa") prendiendo `input_boolean.angel_en_casa`; acceso remoto del celular a HA (VPN, túnel o equivalente gratuito); ADRs de las decisiones de audio y de acceso remoto.
+- **Aprendo:** despliegue en un equipo de producción, audio desde un contenedor Docker, zonas y geofencing, exponer un servicio local a internet de forma segura, `supported_features` de los `media_player`.
+- **Listo cuando:** llego a casa de verdad, sin tocar nada, y LUMEN me saluda por el televisor.
+
+### Sprint 5 — Conversación por voz
 - **Objetivo:** poder hablarle ("Lumen, ...") y que responda.
-- **Entregables:** openWakeWord con la palabra "Lumen"; Whisper (STT); pipeline de Assist completo; el LLM respondiendo preguntas; comandos simples resueltos en local para fluidez.
+- **Entregables:** micrófono conectado al PC viejo; openWakeWord con la palabra "Lumen"; Whisper (STT); pipeline de Assist completo; el LLM respondiendo preguntas; comandos simples resueltos en local para fluidez.
 - **Aprendo:** wake word, STT, el pipeline de voz completo, presupuesto de latencia, local-first.
 - **Listo cuando:** digo "Lumen, ¿qué clima hace?" y responde por voz en pocos segundos.
 
-### Sprint 5 — Dashboard en React/TS
+### Sprint 6 — Dashboard en React/TS
 - **Objetivo:** un panel web propio que muestre estado, historial, clima y noticias.
 - **Entregables:** app React 18 + TS + Vite conectada a la API de Home Assistant; vistas de estado/eventos/clima/noticias; historial de eventos persistido en PostgreSQL.
 - **Aprendo:** consumir la API/websocket de HA, frontend desde cero, persistencia, integrar front con el asistente.
 - **Listo cuando:** abro el dashboard y veo en vivo el estado de LUMEN y el historial de saludos/eventos.
 
-### Sprint 6 — Pulido, documentación y despliegue
-- **Objetivo:** dejar LUMEN listo para portafolio y corriendo 24/7 en el PC viejo.
-- **Entregables:** README pulido (con GIF/demo y diagrama de arquitectura); ADRs de las decisiones clave; carpeta `/docs`; video demo de 30–60 s; despliegue al PC viejo siempre encendido.
-- **Aprendo:** documentación de nivel profesional, ADRs, despliegue, preparar un proyecto para mostrarlo.
-- **Listo cuando:** el repo cuenta la historia solo, hay video demo y LUMEN corre solo en el equipo de producción.
+### Sprint 7 — Pulido, documentación y demo
+- **Objetivo:** dejar LUMEN listo para portafolio.
+- **Entregables:** README pulido (con GIF/demo y diagrama de arquitectura); ADRs de las decisiones clave; carpeta `/docs`; video demo de 30–60 s.
+- **Aprendo:** documentación de nivel profesional, ADRs, preparar un proyecto para mostrarlo.
+- **Listo cuando:** el repo cuenta la historia solo y hay video demo.
 
 ## 6. Backlog de funciones extra
 
@@ -106,13 +117,15 @@ Funciones gratis para jalar cuando quiera, una vez el núcleo esté firme:
 - Resumen de tráfico / ruta.
 - Recordatorios y temporizadores por voz.
 - Despedida al salir de casa ("hasta luego").
+- Reproducir música (Spotify u otra fuente free) desde el asistente.
 
 ## 7. Estado actual
 
 - [x] Sprint 0 — Cimientos
-- [ ] Sprint 1 — Presencia + primera voz
+- [x] Sprint 1 — Primera voz
 - [ ] Sprint 2 — Datos reales
 - [ ] Sprint 3 — Cerebro + voz natural
-- [ ] Sprint 4 — Conversación por voz
-- [ ] Sprint 5 — Dashboard
-- [ ] Sprint 6 — Pulido y despliegue
+- [ ] Sprint 4 — LUMEN en casa
+- [ ] Sprint 5 — Conversación por voz
+- [ ] Sprint 6 — Dashboard
+- [ ] Sprint 7 — Pulido y demo
